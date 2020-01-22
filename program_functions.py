@@ -1,4 +1,4 @@
-from Bio import SeqIO
+from Bio import SeqIO #needed for read_in
 
 def read_in(filename):
     if ".pdb" in filename:
@@ -7,6 +7,7 @@ def read_in(filename):
         mode = "cif-seqres" #full mmcif structure
     else:
         raise ValueError("Please give a .pdb or .cif file!")
+        #aborts program if pdb or mmcif not given
     for record in SeqIO.parse(filename, mode):
         return record.seq #returns a Sequence object (iterable)
 
@@ -32,7 +33,7 @@ def get_colour(residue):
         return("#000000") #unknown residues will stay black
 
 def write_out(filename = "2DREP_Output.html", sequence = None):
-    with open(filename, "w") as output:
+    with open(filename, "w") as output: #below: HTML boilerplate with inline CSS
         output.write("""
             <html lang="en" dir="ltr">
             <head>
@@ -42,14 +43,16 @@ def write_out(filename = "2DREP_Output.html", sequence = None):
                 <body>
                     <p style="font-family:courier; font-size:2vw;">
                 """
-                )
-        for residue in sequence:
-            colour = get_colour(residue)
-            if colour:
+                ) #Working title is 2DREP
+        for residue in sequence: #sequence is seen as a string here for printing.
+            colour = get_colour(residue) #chooses the hexcode for the appropriate class of residue
+            if colour: #non-residue letters such as line break characters return False instead of a hexcode in get_colour
                 output.write("<span style=\"color:" + colour + "\">" + residue +"</span>")
+                #writes a span tag for each character with its appropriate hexcode colour
             else:
                 output.write(residue)
+                #writes your unknown residue or line break charater without style
         output.write("""
             </p>
         </body>
-    </html>""")
+    </html>""") #close HTML
