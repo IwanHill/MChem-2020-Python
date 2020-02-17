@@ -82,43 +82,51 @@ def get_colour(residue):
     elif residue in ("A", "V", "I", "L", "M", "F", "Y", "W"):
         return("#C6BE2A") #hydrophobic side chains in oily yellow
     else:
-        return False #won't throw style at any unnatural amino acid or
+        return False #won't throw style at any unnatural amino acid or formatting characters.
 
-def write_out(filename = "2DREP_Output.html", sequence = None):
-    with open(filename, "w") as output: #below: HTML boilerplate with inline CSS
+def write_boilerplate_start(filename = "2DREP_Output.html"):
+    with open(filename, "a") as output: #use "a" to append, prevents overwriting.
+        #below: HTML boilerplate with inline CSS
         output.write("""
             <html lang="en" dir="ltr">
             <head>
                 <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1.0">
-                <style>
-                img {
-                width: 50%;
-                height: 25%;
-                }
-                </style>
                 <title>"2DREP"</title>
                 </head>
                 <body>
-                <img src="2DREP_logo.png" alt="2DREP Logo">
+                <img style=width: 10%; height: 75%; src="2DREP_logo.png" alt="2DREP Logo">
                     <div style="font-family:courier; font-size:2vw;">
                 """
                 ) #Working title is 2DREP
-        for residue in sequence: #sequence is seen as a string here for printing.
-            colour = get_colour(residue) #chooses the hexcode for the appropriate class of residue
-            if colour: #non-residue letters such as line break characters return False instead of a hexcode in get_colour
-                output.write("<span style=\"color:" + colour + "\">" + residue +"</span>")
-                #writes a span tag for each character with its appropriate hexcode colour
-            else:
-                output.write(residue)
-                #writes your unknown residue or line break charater without style
+                #logo styling is not working inline but other bits are...
+
+def write_boilerplate_end(filename = "2DREP_Output.html"):
+    with open(filename, "a") as output: #"a" to append to end of sequence output.
         output.write("""
                 </div>
             </p>
         </body>
     </html>""") #close HTML
 
+def write_data(filename = "2DREP_Output.html", sequence = None):
+    counter = 0 #allows us to integrate line_breaker functionality into our
+    with open(filename, "a") as output:
+        for residue in sequence:
+            if counter == 0:
+                output.write("S A M P L E L E T T E R S ~ALPHA1~ <img src=\"sample_helix.png\" alt=\"sample_helix\"> _BETA1_ <img src=\"sample_sheet.png\" alt=\"sample_sheet\"> </div><div style=\"font-family:courier; font-size:2vw;\">")
+            #call some function that will write the  annotations we want! Probs need to check in with Jon for this...
+            counter += 1
+            colour = get_colour(residue)
+            if colour:
+                output.write("<span style=\"color:" + colour + "\">" + residue + "</span>") #colours with the appropriate hexcode for our residue
+            else:
+                output.write(residue)
+            if counter == 80:
+                output.write("</div><div style=\"font-family:courier; font-size:2vw;\">")
+                counter = 0
 
 molecule = clipper_readin(sys.argv[1]) #reads in file from command line
 sequence = fasta(molecule)
-br_sequence = line_breaker(sequence)
-write_out(sys.argv[2], br_sequence)
+write_boilerplate_start(sys.argv[2])
+write_data(sys.argv[2], sequence)
+write_boilerplate_end(sys.argv[2])
