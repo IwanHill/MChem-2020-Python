@@ -8,61 +8,23 @@ def clipper_readin(filename): #from Hackers tutorial
     model_file.import_minimol(molecule)
     return molecule
 
-def three_letter_rep(monomer):
-    for polymer in model:
-        for monomer in polymer:
-            if monomer.type().trim() in ("ALA", "ARG", "ASN", "ASP", "CYS",
-            "GLN", "GLU", "GLY", "HIS", "ILE", "LEU", "LYS", "MET", "PHE",
-            "PRO", "SER", "THR", "TRP", "TYR", "VAL"):
-#need to isolate amino acids from monosaccahrides, water, ligands etc
-                print monomer.type().trim()
-
 def fasta(molecule):
     model = molecule.model()
+    sequence = "" #need something to add residues to
+    #counter = 0
+    residues = dict(ALA = "A", ARG = "R", HIS = "H", LYS = "K", ASP = "D",
+    GLU = "E", SER = "S", THR = "T", ASN = "N", GLN = "Q", PRO = "P",
+    VAL = "V", ILE = "I", LEU = "L", MET = "M", PHE = "F", TYR = "Y",
+    TRP = "W", CYS = "C", GLY = "G", UNK = "X") #dictionary of natural AAs.
     for polymer in model:
-        sequence = "" #starts empty
-        for monomer in polymer: #fasta covnersion by brute force
-        #do we wanna use a dictonary here?
-            if monomer.type().trim() == "ALA":
-                sequence += "A"
-            elif monomer.type().trim() == "ARG":
-                sequence += "R"
-            elif monomer.type().trim() == "HIS":
-                sequence += "H"
-            elif monomer.type().trim() == "LYS":
-                sequence += "K"
-            elif monomer.type().trim() == "ASP":
-                sequence += "D"
-            elif monomer.type().trim() == "GLU":
-                sequence += "E"
-            elif monomer.type().trim() == "SER":
-                sequence += "S"
-            elif monomer.type().trim() == "THR":
-                sequence += "T"
-            elif monomer.type().trim() == "ASP":
-                sequence += "N"
-            elif monomer.type().trim() == "GLU":
-                sequence += "Q"
-            elif monomer.type().trim() == "CYS":
-                sequence += "C"
-            elif monomer.type().trim() == "GLY":
-                sequence += "G"
-            elif monomer.type().trim() == "PRO":
-                sequence += "P"
-            elif monomer.type().trim() == "VAL":
-                sequence += "V"
-            elif monomer.type().trim() == "ILE":
-                sequence += "I"
-            elif monomer.type().trim() == "LEU":
-                sequence += "L"
-            elif monomer.type().trim() == "MET":
-                sequence += "M"
-            elif monomer.type().trim() == "PHE":
-                sequence += "F"
-            elif monomer.type().trim() == "TYR":
-                sequence += "Y"
-            elif monomer.type().trim() == "TRP":
-                sequence += "W"
+        #sequence += "<br>"
+        #counter += 1
+        #sequence += "chain " + str(counter) + ": <br>"
+        for monomer in polymer:
+            if monomer.type().trim() in residues:
+                sequence += residues[monomer.type().trim()]
+            else:
+                pass #cuts out *all* non standard amino acids, heteroatoms, worth looking at later,
     return sequence
 
 def line_breaker(input): #slices and rejoins every 80 characters with 2 HTML line breaks
@@ -94,7 +56,7 @@ def write_boilerplate_start(filename = "2DREP_Output.html"):
                 <title>"2DREP"</title>
                 </head>
                 <body>
-                <img style=width: 10%; height: 75%; src="2DREP_logo.png" alt="2DREP Logo">
+                <img src="2DREP_logo.png" alt="2DREP Logo" style="width:40%;height:25%;">
                     <div style="font-family:courier; font-size:2vw;">
                 """
                 ) #Working title is 2DREP
@@ -113,7 +75,10 @@ def write_data(filename = "2DREP_Output.html", sequence = None):
     with open(filename, "a") as output:
         for residue in sequence:
             if counter == 0:
-                output.write("S A M P L E L E T T E R S ~ALPHA1~ <img src=\"sample_helix.png\" alt=\"sample_helix\"> _BETA1_ <img src=\"sample_sheet.png\" alt=\"sample_sheet\"> </div><div style=\"font-family:courier; font-size:2vw;\">")
+                output.write("""
+                S A M P L E L E T T E R S ~ALPHA1~ <img src="sample_helix.png" alt="sample_helix" style="width:10%;heigth:10%">
+                _BETA1_ <img src="sample_sheet.png" alt="sample_sheet" style="width:10%;heigth:10%"> </div><div style="font-family:courier;
+                font-size:2vw;"> """)
             #call some function that will write the  annotations we want! Probs need to check in with Jon for this...
             counter += 1
             colour = get_colour(residue)
