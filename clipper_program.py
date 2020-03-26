@@ -54,27 +54,33 @@ def background_B_colour(list_of_Bs):
     for avg_B in list_of_Bs:
         if avg_B <= (0.05 * max(list_of_Bs)):
             bkgrnd_colours.append("#FFFFFF")
-        if avg_B >= (0.05 * max(list_of_Bs)) and avg_B <= (0.15 * max(list_of_Bs)):
+        elif avg_B >= (0.05 * max(list_of_Bs)) and avg_B <= (0.15 * max(list_of_Bs)):
             bkgrnd_colours.append("#E6E6E6")
-        if avg_B >= (0.15 * max(list_of_Bs)) and avg_B <= (0.25 * max(list_of_Bs)):
+        elif avg_B >= (0.15 * max(list_of_Bs)) and avg_B <= (0.25 * max(list_of_Bs)):
             bkgrnd_colours.append("#CCCCCC")
-        if avg_B >= (0.25 * max(list_of_Bs)) and avg_B <= (0.35 * max(list_of_Bs)):
+        elif avg_B >= (0.25 * max(list_of_Bs)) and avg_B <= (0.35 * max(list_of_Bs)):
             bkgrnd_colours.append("#B3B3B3")
-        if avg_B >= (0.35 * max(list_of_Bs)) and avg_B <= (0.45 * max(list_of_Bs)):
+        elif avg_B >= (0.35 * max(list_of_Bs)) and avg_B <= (0.45 * max(list_of_Bs)):
             bkgrnd_colours.append("#999999")
-        if avg_B >= (0.45 * max(list_of_Bs)) and avg_B <= (0.55 * max(list_of_Bs)):
+        elif avg_B >= (0.45 * max(list_of_Bs)) and avg_B <= (0.55 * max(list_of_Bs)):
             bkgrnd_colours.append("#808080")
-        if avg_B >= (0.55 * max(list_of_Bs)) and avg_B <= (0.65 * max(list_of_Bs)):
+        elif avg_B >= (0.55 * max(list_of_Bs)) and avg_B <= (0.65 * max(list_of_Bs)):
             bkgrnd_colours.append("#666666")
-        if avg_B >= (0.65 * max(list_of_Bs)) and avg_B <= (0.75 * max(list_of_Bs)):
+        elif avg_B >= (0.65 * max(list_of_Bs)) and avg_B <= (0.75 * max(list_of_Bs)):
             bkgrnd_colours.append("#4D4D4D")
-        if avg_B >= (0.75 * max(list_of_Bs)) and avg_B <= (0.85 * max(list_of_Bs)):
+        elif avg_B >= (0.75 * max(list_of_Bs)) and avg_B <= (0.85 * max(list_of_Bs)):
             bkgrnd_colours.append("#333333")
-        if avg_B >= (0.85 * max(list_of_Bs)) and avg_B <= (0.95 * max(list_of_Bs)):
+        elif avg_B >= (0.85 * max(list_of_Bs)) and avg_B <= (0.95 * max(list_of_Bs)):
             bkgrnd_colours.append("#1A1A1A")
-        if avg_B >= (0.95 * max(list_of_Bs)):
+        elif avg_B >= (0.95 * max(list_of_Bs)):
             bkgrnd_colours.append("#000000")
     return(bkgrnd_colours)
+
+def calc_sec():
+    pass
+
+def calc_tert():
+    pass
 
 def write_boilerplate_start(filename = "2DREP_Output.html"):
     with open(filename, "a") as output: #use "a" to append, prevents overwriting.
@@ -88,7 +94,7 @@ def write_boilerplate_start(filename = "2DREP_Output.html"):
                 <body>
                 <img src="logo_and_legend.png" alt="2DREP Logo" style="width:100%;height:40%;">
                 """
-                ) 
+                )
 
 def write_boilerplate_end(filename = "2DREP_Output.html"):
     with open(filename, "a") as output: #"a" to append to end of sequence output.
@@ -102,7 +108,7 @@ def write_data(filename = "2DREP_Output.html", molecule = None):
     model = molecule.model()
     with open(filename, "a") as output:
         for polymer in model:
-            character_number = 76
+            character_number = 78
             counter = 0 #allows us to integrate line_breaker functionality into our writer
             residue_count = 0 #tracked separately, won't reset with each new line.
             output.write("""<div style="font-family:courier; font-size:2vw; text-decoration:underline;"><br> Chain """)
@@ -117,11 +123,9 @@ def write_data(filename = "2DREP_Output.html", molecule = None):
             for residue in sequence:
                 residue_count += 1
                 if counter == 0:
-                    output.write("""
-                    <div style="font-family:courier; font-size:2vw;">
-                    &nbsp;&nbsp;&nbsp;&nbsp;S A M P L E L E T T E R S ~ALPHA1~ <img src="sample_helix.png" alt="sample_helix" style="width:10%;heigth:10%">
-                    _BETA1_ <img src="sample_sheet.png" alt="sample_sheet" style="width:10%;heigth:10%"> </div><div style="font-family:courier;
-                    font-size:2vw;"> """)
+                    secondary = calc_sec()
+                    output.write("<div style=\"font-family:courier;font-size:2vw;\">&nbsp;&nbsp;&nbsp;&nbsp;" + str(secondary))
+                    output.write("</div><div style=\"font-family:courier;font-size:2vw;\">")
                     #call some function that will write the  annotations we want! Probs need to check in with Jon for this...
                     output.write(str(residue_count))
                     if residue_count < 100:
@@ -134,7 +138,7 @@ def write_data(filename = "2DREP_Output.html", molecule = None):
                 output.write("<span style=\"color:" + colour + "; background-color:" + background + "\">" + residue + "</span>") #colours with the appropriate hexcode for our residue
                 counter += 1
                 if len(str(residue_count)) != 1 and len(str(residue_count)) != 2:
-                    character_number = 77 #ends up with 74 residues to a line, so new lines are on multiples of 75, for easier counting.
+                    character_number = 79 #ends up with 74 residues to a line, so new lines are on multiples of 75, for easier counting.
                 if counter == (character_number - len(str(residue_count))):
                     output.write("</div>")
                     counter = 0
