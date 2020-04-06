@@ -1,6 +1,7 @@
 import sys
 import math
 from clipper_python import _clipper as clipper
+from clipper_tools.metrics import MetricsModel
 
 #set a dictionary of residues as a global variable
 #allows multiple functions to draw from same dictionary
@@ -76,10 +77,22 @@ def background_B_colour(list_of_Bs):
             bkgrnd_colours.append("#000000")
     return(bkgrnd_colours)
 
-def calc_sec():
-    pass
+def calc_sec(molecule = None):
+    model = MetricsModel(molecule)
+    identifiers = []
+    for chain in model.chains:
+        for residue in chain:
+            if residue.is_aa:
+                if residue.psi < 3.14159 and residue.psi > 0.261799 and residue.phi < -0.785398 and residue.ramachandran_favored:
+                    identifiers.append("&beta;")
+                elif residue.psi < -0.349066 and residue.psi > -1.22173 and residue.phi < -0.785398 and residue.ramachandran_favored:
+                    identifiers.append("&alpha;")
+                else:
+                    identifiers.append("&nbsp")
+    return identifiers
 
-def calc_tert():
+
+def calc_tert(molecule):
     pass
 
 def write_boilerplate_start(filename = "2DREP_Output.html"):
@@ -123,8 +136,13 @@ def write_data(filename = "2DREP_Output.html", molecule = None):
             for residue in sequence:
                 residue_count += 1
                 if counter == 0:
-                    secondary = calc_sec()
-                    output.write("<div style=\"font-family:courier;font-size:2vw;\">&nbsp;&nbsp;&nbsp;&nbsp;" + str(secondary))
+                    output.write("<div style=\"font-family:courier;font-size:2vw;\">&nbsp;&nbsp;&nbsp;&nbsp;")
+                    if residue_count+75 < len(sequence):
+                        for i in range(residue_count-1, residue_count+75):
+                            output.write(sec_struc[i])
+                    else:
+                        for i in range(residue_count-1, len(sequence)):
+                            output.write(sec_struc[i])
                     output.write("</div><div style=\"font-family:courier;font-size:2vw;\">")
                     #call some function that will write the  annotations we want! Probs need to check in with Jon for this...
                     output.write(str(residue_count))
@@ -135,15 +153,18 @@ def write_data(filename = "2DREP_Output.html", molecule = None):
                     output.write("&nbsp")
                 colour = get_colour(residue)
                 background = background_shades[residue_count - 1] #residue count starts at 1, indices start at 0.
-                output.write("<span style=\"color:" + colour + "; background-color:" + background + "\">" + residue + "</span>") #colours with the appropriate hexcode for our residue
+                output.write("<span style=\"color:" + colour + "; background-color:" + background + "\">" + residue + "</span>")
+                #colours with the appropriate hexcode for our residue
                 counter += 1
                 if len(str(residue_count)) != 1 and len(str(residue_count)) != 2:
-                    character_number = 79 #ends up with 74 residues to a line, so new lines are on multiples of 75, for easier counting.
+                    character_number = 79
                 if counter == (character_number - len(str(residue_count))):
                     output.write("</div>")
                     counter = 0
 
 molecule = clipper_readin(sys.argv[1]) #reads in file from command line
+sec_struc = calc_sec(molecule)
+tert_struc = calc_tert(molecule)
 write_boilerplate_start(sys.argv[2])
 write_data(sys.argv[2], molecule)
 write_boilerplate_end(sys.argv[2])
