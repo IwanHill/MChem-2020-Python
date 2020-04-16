@@ -88,12 +88,87 @@ def calc_sec(molecule = None):
                 elif residue.psi < -0.349066 and residue.psi > -1.22173 and residue.phi < -0.785398 and residue.ramachandran_favored:
                     identifiers.append("&alpha;")
                 else:
-                    identifiers.append("&nbsp")
+                    identifiers.append("&nbsp;")
     return identifiers
 
+def ss_bridge(molecule=None):
+    model = molecule.model()
+    cysteines = []
+    bridge_pairs = {} #set up lists to add outputs to
+    i = 0
+    for polymer in model:
+        for monomer in polymer:
+            if monomer.type().trim() == "CYS":
+                cysteines.append(monomer) #assemble a list of all CYS residues
+    for cys in cysteines:
+        cys_1_S = cys.find(clipper.String("SG")).coord_orth #set location of first cys
+        for next in cysteines:
+            #test first cys against all subsequent, looking for closeness (hence a bridge)
+            cys_2_S = next.find(clipper.String("SG")).coord_orth
+            if clipper.Coord_orth.length(cys_1_S, cys_2_S) < 2.6 and clipper.Coord_orth.length(cys_1_S, cys_2_S) != 0:
+                i += 1#gives a numbered key for use as our bridge annotation
+                bridge_pairs[i] = (cys.id().trim(), next.id().trim())
+                cysteines.remove(cys) #prevents repetition
+    return bridge_pairs
 
-def calc_tert(molecule):
-    pass
+def salt_bridge(molecule=None):
+    model = molecule.model()
+    positives = []
+    negatives = []
+    bridge_pairs = {} #set up lists to add outputs to
+    x = 0
+    for polymer in model:
+        for monomer in polymer:
+            if monomer.type().trim() in ("ARG", "LYS", "HIS"):
+                positives.append(monomer)
+            elif monomer.type().trim() in ("ASP", "GLU"):
+        		negatives.append(monomer)
+
+    for positive in positives:
+        if positive.type().trim() == "ARG": #for each residue, the atom at the center of the charged region is measured from.
+            plus_coord = positive.find(clipper.String("CZ")).coord_orth
+        elif positive.type().trim() == "LYS":
+            plus_coord = positive.find(clipper.String("NZ")).coord_orth
+        elif positive.type().trim() == "HIS":
+            plus_coord = positive.find(clipper.String("ND1")).coord_orth
+
+    	for negative in negatives:
+            if negative.type().trim() == "ASP":
+                neg_coord = negative.find(clipper.String("CG")).coord_orth
+            elif negative.type().trim() == "GLU":
+                neg_coord = negative.find(clipper.String("CD")).coord_orth
+
+            if clipper.Coord_orth.length(plus_coord, neg_coord) < 5.0:
+                x += 1
+                bridge_pairs[x] = (positive.id().trim(), negative.id().trim())
+
+    return bridge_pairs
+
+
+def calc_tert(molecule=None):
+    identifiers = []
+    ionics = salt_bridge(molecule)
+    disulfides = ss_bridge(molecule)
+    model = molecule.model()
+    for polymer in model:
+        for monomer in polymer:
+            if monomer.type().trim() in residues: #excludes water and ligands
+                if monomer.type().trim() in ("ARG", "LYS", "HIS"):
+                    for key, value in ionics.items():
+                        if monomer.id().trim() in value:
+                            identifiers.append("<span style=\"color:white;background-color:#0027FF\">" + str(key) + "</span>")
+                elif monomer.type().trim() in ("ASP", "GLU"):
+                    for key, value in ionics.items():
+                        if monomer.id().trim() in value:
+                            identifiers.append("<span style=\"background-color:#D71313\">" + str(key) + "</span>")
+                elif monomer.type().trim() == "CYS":
+                    for key, value in disulfides.items():
+                        if monomer.id().trim() in value:
+                            identifiers.append("<span style=\"background-color:#EBEB00\">" + str(key) + "</span>")
+                else:
+                    identifiers.append("&nbsp;")
+    return identifiers
+
 
 def write_boilerplate_start(filename = "2DREP_Output.html"):
     with open(filename, "a") as output: #use "a" to append, prevents overwriting.
@@ -136,6 +211,16 @@ def write_data(filename = "2DREP_Output.html", molecule = None):
             for residue in sequence:
                 residue_count += 1
                 if counter == 0:
+
+                    output.write("<div style=\"font-family:courier;font-size:2vw;\">&nbsp;&nbsp;&nbsp;&nbsp;")
+                    if residue_count+75 < len(sequence):
+                        for i in range(residue_count-1, residue_count+75):
+                            output.write(tert_struc[i])
+                    else:
+                        for i in range(residue_count-1, len(sequence)):
+                            output.write(tert_struc[i])
+                    output.write("</div><div style=\"font-family:courier;font-size:2vw;\">")
+
                     output.write("<div style=\"font-family:courier;font-size:2vw;\">&nbsp;&nbsp;&nbsp;&nbsp;")
                     if residue_count+75 < len(sequence):
                         for i in range(residue_count-1, residue_count+75):
@@ -144,7 +229,7 @@ def write_data(filename = "2DREP_Output.html", molecule = None):
                         for i in range(residue_count-1, len(sequence)):
                             output.write(sec_struc[i])
                     output.write("</div><div style=\"font-family:courier;font-size:2vw;\">")
-                    #call some function that will write the  annotations we want! Probs need to check in with Jon for this...
+
                     output.write(str(residue_count))
                     if residue_count < 100:
                         output.write("&nbsp;")
