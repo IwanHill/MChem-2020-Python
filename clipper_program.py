@@ -125,20 +125,34 @@ def salt_bridge(molecule=None):
         		negatives.append(monomer)
 
     for positive in positives:
-        if positive.type().trim() == "ARG": #for each residue, the atom at the center of the charged region is measured from.
-            plus_coord = positive.find(clipper.String("CZ")).coord_orth
+        if positive.type().trim() == "ARG":
+            try:
+                plus_coord = positive.find(clipper.String("CZ")).coord_orth
+            except:
+                pass #many files are missing side chains for some residues - these cause horrendous errors if not excepeted!
         elif positive.type().trim() == "LYS":
-            plus_coord = positive.find(clipper.String("NZ")).coord_orth
+            try:
+                plus_coord = positive.find(clipper.String("NZ")).coord_orth
+            except:
+                pass
         elif positive.type().trim() == "HIS":
-            plus_coord = positive.find(clipper.String("ND1")).coord_orth
-
+            try:
+                plus_coord = positive.find(clipper.String("ND1")).coord_orth
+            except:
+                pass
     	for negative in negatives:
             if negative.type().trim() == "ASP":
-                neg_coord = negative.find(clipper.String("CG")).coord_orth
+                try:
+                    neg_coord = negative.find(clipper.String("CG")).coord_orth
+                except:
+                    pass
             elif negative.type().trim() == "GLU":
-                neg_coord = negative.find(clipper.String("CD")).coord_orth
+                try:
+                    neg_coord = negative.find(clipper.String("CD")).coord_orth
+                except:
+                    pass
 
-            if clipper.Coord_orth.length(plus_coord, neg_coord) < 5.0:
+            if clipper.Coord_orth.length(plus_coord, neg_coord) < 4.5:
                 x += 1
                 bridge_pairs[x] = (positive.id().trim(), negative.id().trim())
 
@@ -149,22 +163,30 @@ def calc_tert(molecule=None):
     identifiers = []
     ionics = salt_bridge(molecule)
     disulfides = ss_bridge(molecule)
+    counter = 0
     model = molecule.model()
     for polymer in model:
         for monomer in polymer:
+            counter += 1
             if monomer.type().trim() in residues: #excludes water and ligands
                 if monomer.type().trim() in ("ARG", "LYS", "HIS"):
                     for key, value in ionics.items():
                         if monomer.id().trim() in value:
                             identifiers.append("<span style=\"color:white;background-color:#0027FF\">" + str(key) + "</span>")
+                    if counter != len(identifiers):
+                        identifiers.append("&nbsp;")
                 elif monomer.type().trim() in ("ASP", "GLU"):
                     for key, value in ionics.items():
                         if monomer.id().trim() in value:
                             identifiers.append("<span style=\"background-color:#D71313\">" + str(key) + "</span>")
+                    if counter != len(identifiers):
+                        identifiers.append("&nbsp;")
                 elif monomer.type().trim() == "CYS":
                     for key, value in disulfides.items():
                         if monomer.id().trim() in value:
                             identifiers.append("<span style=\"background-color:#EBEB00\">" + str(key) + "</span>")
+                    if counter != len(identifiers):
+                        identifiers.append("&nbsp;")
                 else:
                     identifiers.append("&nbsp;")
     return identifiers
@@ -199,7 +221,7 @@ def write_data(filename = "2DREP_Output.html", molecule = None):
             character_number = 78
             counter = 0 #allows us to integrate line_breaker functionality into our writer
             residue_count = 0 #tracked separately, won't reset with each new line.
-            output.write("""<div style="font-family:courier; font-size:2vw; text-decoration:underline;"><br> Chain """)
+            output.write("""<div style="font-family:courier; font-size:2vw; color:black; text-decoration:underline;"><br> Chain """)
             output.write(str(polymer.id().trim()))
             output.write(": </div>")
             bfacs_list = [] #we'll pull a B factor for display later
@@ -212,25 +234,25 @@ def write_data(filename = "2DREP_Output.html", molecule = None):
                 residue_count += 1
                 if counter == 0:
 
-                    output.write("<div style=\"font-family:courier;font-size:2vw;\">&nbsp;&nbsp;&nbsp;&nbsp;")
+                    output.write("<div style=\"font-family:courier;font-size:2vw;color:black;\"><span style=\"color:#666666;\">3&deg;</span>&nbsp;&nbsp;")
                     if residue_count+75 < len(sequence):
                         for i in range(residue_count-1, residue_count+75):
                             output.write(tert_struc[i])
                     else:
                         for i in range(residue_count-1, len(sequence)):
                             output.write(tert_struc[i])
-                    output.write("</div><div style=\"font-family:courier;font-size:2vw;\">")
+                    output.write("</div>")
 
-                    output.write("<div style=\"font-family:courier;font-size:2vw;\">&nbsp;&nbsp;&nbsp;&nbsp;")
+                    output.write("<div style=\"font-family:courier;font-size:2vw;color:black;\"><span style=\"color:#666666;\">2&deg;</span>&nbsp;&nbsp;")
                     if residue_count+75 < len(sequence):
                         for i in range(residue_count-1, residue_count+75):
                             output.write(sec_struc[i])
                     else:
                         for i in range(residue_count-1, len(sequence)):
                             output.write(sec_struc[i])
-                    output.write("</div><div style=\"font-family:courier;font-size:2vw;\">")
+                    output.write("</div><div style=\"font-family:courier;font-size:2vw;color:black;\">")
 
-                    output.write(str(residue_count))
+                    output.write("<span style=\"color:white;background-color:black;\">" + str(residue_count) + "</span>")
                     if residue_count < 100:
                         output.write("&nbsp;")
                     if residue_count < 10:
