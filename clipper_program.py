@@ -113,44 +113,44 @@ def ss_bridge(molecule=None):
 
 def salt_bridge(molecule=None):
     model = molecule.model()
+    metrics = MetricsModel(molecule)
     positives = []
     negatives = []
+    index = 0
+    complete_sides = []
     bridge_pairs = {} #set up lists to add outputs to
     x = 0
+
+    for chain in metrics.chains:
+        for residue in chain:
+            if residue.is_sidechain_complete == True:
+                complete_sides.append(True)
+            else:
+                complete_sides.append(False)
+#many files are missing side chains for some residues
+#these cause errors if not excepeted!
+
     for polymer in model:
         for monomer in polymer:
-            if monomer.type().trim() in ("ARG", "LYS", "HIS"):
-                positives.append(monomer)
-            elif monomer.type().trim() in ("ASP", "GLU"):
-        		negatives.append(monomer)
+            if complete_sides[index]: #checks if current mresiude is complete
+                if monomer.type().trim() in ("ARG", "LYS", "HIS"):
+                    positives.append(monomer)
+                elif monomer.type().trim() in ("ASP", "GLU"):
+        		    negatives.append(monomer)
+            index +=1 #increments index for next residue
 
     for positive in positives:
         if positive.type().trim() == "ARG":
-            try:
-                plus_coord = positive.find(clipper.String("CZ")).coord_orth
-            except:
-                pass #many files are missing side chains for some residues - these cause horrendous errors if not excepeted!
+            plus_coord = positive.find(clipper.String("CZ")).coord_orth
         elif positive.type().trim() == "LYS":
-            try:
-                plus_coord = positive.find(clipper.String("NZ")).coord_orth
-            except:
-                pass
+            plus_coord = positive.find(clipper.String("NZ")).coord_orth
         elif positive.type().trim() == "HIS":
-            try:
-                plus_coord = positive.find(clipper.String("ND1")).coord_orth
-            except:
-                pass
+            plus_coord = positive.find(clipper.String("ND1")).coord_orth
     	for negative in negatives:
             if negative.type().trim() == "ASP":
-                try:
-                    neg_coord = negative.find(clipper.String("CG")).coord_orth
-                except:
-                    pass
+                neg_coord = negative.find(clipper.String("CG")).coord_orth
             elif negative.type().trim() == "GLU":
-                try:
-                    neg_coord = negative.find(clipper.String("CD")).coord_orth
-                except:
-                    pass
+                neg_coord = negative.find(clipper.String("CD")).coord_orth
 
             if clipper.Coord_orth.length(plus_coord, neg_coord) < 4.5:
                 x += 1
@@ -172,19 +172,28 @@ def calc_tert(molecule=None):
                 if monomer.type().trim() in ("ARG", "LYS", "HIS"):
                     for key, value in ionics.items():
                         if monomer.id().trim() in value:
-                            identifiers.append("<span style=\"color:white;background-color:#0027FF\">" + str(key) + "</span>")
+                            if len(str(key)) == 1:
+                                identifiers.append("<span style=\"color:white;background-color:#0027FF\">" + str(key) + "</span>")
+                            else:
+                                identifiers.append("<span style=\"font-size:50%;color:white;background-color:#0027FF\">" + str(key) + "</span>")
                     if counter != len(identifiers):
                         identifiers.append("&nbsp;")
                 elif monomer.type().trim() in ("ASP", "GLU"):
                     for key, value in ionics.items():
                         if monomer.id().trim() in value:
-                            identifiers.append("<span style=\"background-color:#D71313\">" + str(key) + "</span>")
+                            if len(str(key)) == 1:
+                                identifiers.append("<span style=\"background-color:#D71313\">" + str(key) + "</span>")
+                            else:
+                                identifiers.append("<span style=\"font-size:50%;background-color:#D71313\">" + str(key) + "</span>")
                     if counter != len(identifiers):
                         identifiers.append("&nbsp;")
                 elif monomer.type().trim() == "CYS":
                     for key, value in disulfides.items():
                         if monomer.id().trim() in value:
-                            identifiers.append("<span style=\"background-color:#EBEB00\">" + str(key) + "</span>")
+                            if len(str(key)) == 1:
+                                identifiers.append("<span style=\"background-color:#EBEB00\">" + str(key) + "</span>")
+                            else:
+                                identifiers.append("<span style=\"font-size:50%;background-color:#EBEB00\">" + str(key) + "</span>")
                     if counter != len(identifiers):
                         identifiers.append("&nbsp;")
                 else:
