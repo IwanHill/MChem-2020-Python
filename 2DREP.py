@@ -152,7 +152,6 @@ def salt_bridge(molecule=None):
 #these cause errors if not excepeted!
 
     for polymer in model:
-        print polymer.id()
         positives = []
         negatives = []
         bridge_pairs = {}
@@ -215,8 +214,8 @@ def calc_tert(molecule=None):
         identifiers = []
         counter = 0
         for monomer in polymer:
-            counter += 1
             if monomer.type().trim() in residues: #excludes water and ligands
+                counter += 1
                 if monomer.type().trim() in ("ARG", "LYS"):
                     for key, value in ionics[ion_index].items():
                         if monomer.id().trim() in value:
@@ -337,3 +336,4 @@ tert_struc = calc_tert(molecule)
 write_boilerplate_start(sys.argv[2])
 write_data(sys.argv[2], molecule)
 write_boilerplate_end(sys.argv[2])
+print "Output Successful!"
